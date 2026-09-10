@@ -1,27 +1,24 @@
-name: Terraform Azure Resource Groups
+name: Terraform Plan
 
 on:
   push:
     branches:
-      - main
+      - master
+      - feature/branch
 
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
-  terraform:
+  terraform-plan:
+
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -37,7 +34,3 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan
-
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve
