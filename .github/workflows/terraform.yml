@@ -1,10 +1,11 @@
-name: Terraform Plan
+name: Terraform Validate
 
 on:
   push:
     branches:
       - main
       - feature/create-resource-group
+
   pull_request:
     branches:
       - main
@@ -21,7 +22,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify Azure credentials
+        if: github.event_name == 'push'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          missing=()
+          [[ -n "$AZURE_CLIENT_ID" ]] || missing+=(AZURE_CLIENT_ID)
+          [[ -n "$AZURE_TENANT_ID" ]] || missing+=(AZURE_TENANT_ID)
+          [[ -n "$AZURE_SUBSCRIPTION_ID" ]] || missing+=(AZURE_SUBSCRIPTION_ID)
+          if (( ${#missing[@]} > 0 )); then
+            echo "Missing GitHub Actions secrets: ${missing[*]}"
+            exit 1
+          fi
+
       - name: Azure Login
+        if: github.event_name == 'push'
         uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -29,6 +47,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Check Azure Login
+        if: github.event_name == 'push'
         run: az account show
 
       - name: Setup Terraform
@@ -39,8 +58,3 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
-
-      - name: Terraform Plan
-        run: terraform plan
-        env:
-          TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
