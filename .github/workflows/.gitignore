@@ -1,8 +1,0 @@
-@"
-.terraform/
-*.tfstate
-*.tfstate.*
-crash.log
-*.tfvars
-*.tfvars.json
-"@ | Out-File -Encoding utf8 .gitignore
